@@ -189,7 +189,7 @@ The `blocks.router` module contains a routing helper module that assists in addi
 
 - `gulp styles`
 
-    Compile less files to CSS, add vendor prefixes, and copy to the build folder
+    Compile sass files to CSS, add vendor prefixes, and copy to the build folder
 
 ### Bower Files
 
@@ -213,7 +213,7 @@ The `blocks.router` module contains a routing helper module that assists in addi
 
 - `gulp serve-dev`
 
-    Serves the development code and launches it in a browser. The goal of building for development is to do it as fast as possible, to keep development moving efficiently. This task serves all code from the source folders and compiles less to css in a temp folder.
+    Serves the development code and launches it in a browser. The goal of building for development is to do it as fast as possible, to keep development moving efficiently. This task serves all code from the source folders and compiles sass to css in a temp folder.
 
 - `gulp serve-dev --nosync`
 
