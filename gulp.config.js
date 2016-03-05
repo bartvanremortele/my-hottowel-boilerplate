@@ -46,7 +46,10 @@ module.exports = function() {
             '**/*.module.js',
             '**/*.js'
         ],
-        less: client + 'styles/styles.less',
+        sass: {
+            entry: client + 'styles/**/*.scss',
+            includes: [bower.directory + 'compass-mixins/lib']
+        },
         report: report,
         root: root,
         server: server,
