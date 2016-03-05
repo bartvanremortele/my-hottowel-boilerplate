@@ -97,6 +97,18 @@ gulp.task('images', ['clean-images'], function() {
         .pipe(gulp.dest(config.build + 'images'));
 });
 
+/**
+ * Copy resources
+ * @return {Stream}
+ */
+gulp.task('resources', ['clean-resources'], function() {
+    log('Copying resources');
+
+    return gulp
+        .src(config.resources)
+        .pipe(gulp.dest(config.build + 'resources'));
+});
+
 gulp.task('sass-watcher', function() {
     gulp.watch([config.sass.entry], ['styles']);
 });
@@ -212,7 +224,7 @@ gulp.task('build-specs', ['templatecache'], function(done) {
  * This is separate so we can run tests on
  * optimize before handling image or fonts
  */
-gulp.task('build', ['optimize', 'images', 'fonts'], function() {
+gulp.task('build', ['optimize', 'images', 'fonts', 'resources'], function() {
     log('Building everything');
 
     var msg = {
@@ -320,6 +332,14 @@ gulp.task('clean-code', function(done) {
         config.build + '**/*.html'
     );
     return clean(files, done);
+});
+
+/**
+ * Remove all resources from the build folder
+ * @param  {Function} done - callback when complete
+ */
+gulp.task('clean-resources', function(done) {
+    return clean(config.build + 'resources/**/*.*', done);
 });
 
 /**
