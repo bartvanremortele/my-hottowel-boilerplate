@@ -7,6 +7,7 @@ var gulp = require('gulp');
 var path = require('path');
 var _ = require('lodash');
 var $ = require('gulp-load-plugins')({lazy: true});
+var lazypipe = require('lazypipe');
 
 var colors = $.util.colors;
 var envenv = $.util.env;
@@ -120,6 +121,26 @@ gulp.task('templatecache', ['clean-code'], function() {
 });
 
 /**
+ * Create environment config for angular application
+ * @return {Stream}
+ */
+gulp.task('environment-config', function() {
+    log('Creating environment configuration');
+    var env = 'development';
+    if (args.env && args.env !== 'development') {
+        env = args.env
+    }
+
+    return gulp
+        .src('environment.config.json')
+        .pipe($.ngConfig('environment.config', {
+            environment: env,
+            wrap: true
+        }))
+        .pipe(gulp.dest(config.angularappdir));
+});
+
+/**
  * Wire-up the bower dependencies
  * @return {Stream}
  */
@@ -139,7 +160,7 @@ gulp.task('wiredep', function() {
         .pipe(gulp.dest(config.client));
 });
 
-gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
+gulp.task('inject', ['environment-config','wiredep', 'styles', 'templatecache'], function() {
     log('Wire up css into the html, after files are ready');
 
     return gulp
@@ -209,14 +230,14 @@ gulp.task('build', ['optimize', 'images', 'fonts'], function() {
  * and inject them into the new index.html
  * @return {Stream}
  */
-gulp.task('optimize', ['inject', 'test'], function() {
+gulp.task('optimize', ['inject', 'test'], function () {
     log('Optimizing the js, css, and html');
 
-    var assets = $.useref.assets({searchPath: './'});
     // Filters are named for the gulp-useref path
-    var cssFilter = $.filter('**/*.css');
-    var jsAppFilter = $.filter('**/' + config.optimized.app);
-    var jslibFilter = $.filter('**/' + config.optimized.lib);
+    var cssFilter = $.filter('**/*.css', {restore: true});
+    var jsAppFilter = $.filter('**/' + config.optimized.app, {restore: true});
+    var jslibFilter = $.filter('**/' + config.optimized.lib, {restore: true});
+    var notIndexFilter = $.filter(['**/*', '!**/index.html'], {restore: true});
 
     var templateCache = config.temp + config.templateCache.file;
 
@@ -224,28 +245,29 @@ gulp.task('optimize', ['inject', 'test'], function() {
         .src(config.index)
         .pipe($.plumber())
         .pipe(inject(templateCache, 'templates'))
-        .pipe(assets) // Gather all assets from the html with useref
+        // Apply the concat and file replacement with useref
+        .pipe($.useref({searchPath: './'}, lazypipe().pipe($.sourcemaps.init, {loadMaps: true})))
         // Get the css
         .pipe(cssFilter)
         .pipe($.minifyCss())
-        .pipe(cssFilter.restore())
+        .pipe(cssFilter.restore)
         // Get the custom javascript
         .pipe(jsAppFilter)
         .pipe($.ngAnnotate({add: true}))
         .pipe($.uglify())
         .pipe(getHeader())
-        .pipe(jsAppFilter.restore())
+        .pipe(jsAppFilter.restore)
         // Get the vendor javascript
         .pipe(jslibFilter)
         .pipe($.uglify()) // another option is to override wiredep to use min files
-        .pipe(jslibFilter.restore())
+        .pipe(jslibFilter.restore)
         // Take inventory of the file names for future rev numbers
+        .pipe(notIndexFilter)
         .pipe($.rev())
-        // Apply the concat and file replacement with useref
-        .pipe(assets.restore())
-        .pipe($.useref())
+        .pipe(notIndexFilter.restore)
         // Replace the file names in the html with rev numbers
         .pipe($.revReplace())
+        .pipe($.sourcemaps.write('.'))
         .pipe(gulp.dest(config.build));
 });
 
@@ -256,7 +278,7 @@ gulp.task('optimize', ['inject', 'test'], function() {
 gulp.task('clean', function(done) {
     var delconfig = [].concat(config.build, config.temp, config.report);
     log('Cleaning: ' + $.util.colors.blue(delconfig));
-    del(delconfig, done);
+    return del(delconfig, done);
 });
 
 /**
@@ -264,7 +286,7 @@ gulp.task('clean', function(done) {
  * @param  {Function} done - callback when complete
  */
 gulp.task('clean-fonts', function(done) {
-    clean(config.build + 'fonts/**/*.*', done);
+    return clean(config.build + 'fonts/**/*.*', done);
 });
 
 /**
@@ -272,7 +294,7 @@ gulp.task('clean-fonts', function(done) {
  * @param  {Function} done - callback when complete
  */
 gulp.task('clean-images', function(done) {
-    clean(config.build + 'images/**/*.*', done);
+    return clean(config.build + 'images/**/*.*', done);
 });
 
 /**
@@ -284,7 +306,7 @@ gulp.task('clean-styles', function(done) {
         config.temp + '**/*.css',
         config.build + 'styles/**/*.css'
     );
-    clean(files, done);
+    return clean(files, done);
 });
 
 /**
@@ -297,7 +319,7 @@ gulp.task('clean-code', function(done) {
         config.build + 'js/**/*.js',
         config.build + '**/*.html'
     );
-    clean(files, done);
+    return clean(files, done);
 });
 
 /**
@@ -390,7 +412,7 @@ function changeEvent(event) {
  */
 function clean(path, done) {
     log('Cleaning: ' + $.util.colors.blue(path));
-    del(path, done);
+    return del(path, done);
 }
 
 /**

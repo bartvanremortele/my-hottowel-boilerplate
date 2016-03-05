@@ -1,4 +1,4 @@
-# My Application
+# My Hottowel Boilerplate
 
 **Generated from HotTowel Angular**
 
@@ -23,6 +23,9 @@
     >Refer to these [instructions on how to not require sudo](https://github.com/sindresorhus/guides/blob/master/npm-global-without-sudo.md)
 
 ## Running HotTowel
+
+### First run
+- The first time you will have to run the app twice because of the missing initial `environment.config.js`
 
 ### Linting
  - Run code analysis using `gulp vet`. This runs jshint, jscs, and plato.

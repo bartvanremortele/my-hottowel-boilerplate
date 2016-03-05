@@ -22,10 +22,12 @@ module.exports = function() {
         // all javascript that we want to vet
         alljs: [
             './src/**/*.js',
-            './*.js'
+            './*.js',
+            '!' + clientApp + 'environment.config.js'
         ],
         build: './build/',
         client: client,
+        angularappdir: clientApp,
         css: temp + 'styles.css',
         fonts: bower.directory + 'font-awesome/fonts/**/*.*',
         html: client + '**/*.html',
@@ -34,6 +36,7 @@ module.exports = function() {
         index: client + 'index.html',
         // app js, with no specs
         js: [
+            clientApp + 'environment.config.js',
             clientApp + '**/*.module.js',
             clientApp + '**/*.js',
             '!' + clientApp + '**/*.spec.js'
